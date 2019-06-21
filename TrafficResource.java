@@ -99,7 +99,7 @@ public class TrafficResource
     @DELETE
     @Path(value = "dequeue")
     @Produces(value = MediaType.APPLICATION_JSON)
-    public String getJson(@Context Application app)
+    public String deleteJson(@Context Application app)
     {
         AicraftQueue q = getQueue(app);
         Aircraft a = q.dequeue();
