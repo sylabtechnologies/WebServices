@@ -1,12 +1,15 @@
 package com.mycompany.trafficservice;
 
+// of course change xml
+
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.Path;
 import javax.ws.rs.POST;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -16,6 +19,7 @@ import static com.mycompany.aircraftqueue.Util.print;
 
 import com.google.gson.Gson;
 import java.io.*;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
@@ -34,17 +38,11 @@ public class TrafficResource
     @Context
     private static Gson gson = new Gson();
     private static final Aircraft noData = new Aircraft(-1, null, null, null);
-    private AicraftQueue queue;
-
-    public TrafficResource()
-    {
-        queue = new AicraftQueue();
-    }
 
     @POST
     @Path("enqueue")
     @Consumes(MediaType.APPLICATION_JSON)    
-    public Response postJson(InputStream is)
+    public Response postJson(@Context Application app, InputStream is)
     {
         boolean statusOK = true;
         StringBuilder jsonBuilder = new StringBuilder();
@@ -62,7 +60,7 @@ public class TrafficResource
             print("error parsing Json");
             statusOK = false;
         }
-        // print(jsonBuilder.toString());
+        // Util.print(jsonBuilder.toString());
 
         Aircraft a = null;
         if (statusOK)
@@ -72,26 +70,29 @@ public class TrafficResource
                 statusOK = false;
         }
         
-        if (!statusOK)
-            return Response.status(Response.Status.BAD_REQUEST).entity("not OK").build();
-        else
+        if (statusOK)
         {
-            queue.enqueue(a);
+            Map<String, Object> properties = app.getProperties();
+            AicraftQueue q = (AicraftQueue) properties.get("QUEUE");
+            q.enqueue(a);
             return Response.status(Response.Status.OK).entity(a.getName() + " OK").build();
         }
+        else
+            return Response.status(Response.Status.BAD_REQUEST).entity("not OK").build();
         
     }
 
     @DELETE
     @Path(value = "dequeue")
     @Produces(value = MediaType.APPLICATION_JSON)
-    public String getJson()
+    public String getJson(@Context Application app)
     {
-        Aircraft a = queue.dequeue();
-        if ( a == null)
-            return "EMPTY";
-        else
-            return gson.toJson( a );
+        Map<String, Object> properties = app.getProperties();
+        AicraftQueue q = (AicraftQueue) properties.get("QUEUE");
+        
+        Aircraft a = q.dequeue();
+        if ( a == null) a = noData;
+        return gson.toJson( a );
     }
 
 }
