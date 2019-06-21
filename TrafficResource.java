@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.persistence.PersistenceContext;
@@ -66,10 +67,11 @@ public class TrafficResource
         }
         catch (Exception e)
         {
+            logger.log(Level.SEVERE, "Error parsing postJson()");
             print("error parsing Json");
             statusOK = false;
         }
-        // Util.print(jsonBuilder.toString());
+        // print(jsonBuilder.toString());
 
         Aircraft a = null;
         if (statusOK)
@@ -86,7 +88,11 @@ public class TrafficResource
             return Response.status(Response.Status.OK).entity(a.getName() + " OK").build();
         }
         else
+        {
+            logger.log(Level.SEVERE, "Error parsing postJson()");
+            print("error parsing Json");
             return Response.status(Response.Status.BAD_REQUEST).entity("not OK").build();
+        }
         
     }
 
