@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<web-app>
+    <context-param>
+        <param-name>PROJECT_MEMORY</param-name>
+        <param-value>Memory-Queue</param-value>
+    </context-param>
+</web-app>

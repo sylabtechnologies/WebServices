@@ -1,0 +1,5 @@
+ * 78. debug - is it suspend=y
+ * https://stackoverflow.com/questions/25994321/glassfish-netbeans-attaching-to-localhost-connection-refused
+ * 
+ * TOTALLY asadmin start-domain --debug ALL OK
+
