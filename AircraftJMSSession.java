@@ -1,3 +1,5 @@
+// https://github.com/javaee/tutorial-examples/blob/master/jms/simple/producer/src/main/java/javaeetutorial/producer/Producer.java
+
 package AircraftQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -1,9 +1,8 @@
 // THE FACADE
-// http://localhost:4848/common/index.jsf
-// asadmin start-domain --debug
 
 package AircraftQueue;
 
+import com.google.gson.Gson;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.Produces;
@@ -33,6 +32,7 @@ public class AircraftQueueResource
     public static final Logger logger = Logger.getLogger(AircraftQueueResource.class.getCanonicalName());
     private static final Aircraft noData = new Aircraft(-1, null, null, null);
 
+    private Gson gson = new Gson();
     private ApplicationQueue myQueue = null;
     private AircraftJMSSession addSession;
     private AircraftJMSSession remSession;
@@ -73,6 +73,7 @@ public class AircraftQueueResource
         remSession.close();
     }
     
+    
     @POST
     @Path("enqueue")
     @Consumes(MediaType.TEXT_PLAIN)
@@ -104,7 +105,7 @@ public class AircraftQueueResource
         if (statusOK)
         {
             myQueue.enqueue(a);
-            addSession.sendMessage(a.toJson());
+            addSession.sendMessage(JsonTuple(a));
             return Response.status(Response.Status.OK).entity(a.getId() + " OK").build();
         }
         else
@@ -156,6 +157,12 @@ public class AircraftQueueResource
     private void writeSevereWarning(String error)
     {
         logger.log(Level.SEVERE, error);
+    }
+
+    private String JsonTuple(Aircraft a)
+    {
+        AircraftQueueItem qi = new AircraftQueueItem(a);
+        return gson.toJson(qi);
     }
     
 }
