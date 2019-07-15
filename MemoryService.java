@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package memservice;
 
 import java.io.*;
@@ -32,7 +35,7 @@ import javax.annotation.PreDestroy;
 public class MemoryService
 {
     public static final Logger logger = Logger.getLogger(MemoryService.class.getCanonicalName());
-    private ConcurrentHashMap<Integer, String> memory = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, AircraftQueueItem> memory = new ConcurrentHashMap<>();
 
     @Context Application app;
 
@@ -56,7 +59,8 @@ public class MemoryService
         try {
             addSession = new SyncJMSSession(memory, jmsConnectionFactory, addMemoryQueue, true);
             remSession = new SyncJMSSession(memory, jmsConnectionFactory, remMemoryQueue, false);
-        } catch (JMSException ex) {
+        } catch (JMSException ex)
+        {
             Logger.getLogger(SyncJMSSession.class.getName()).log(Level.SEVERE, null, ex);
         }
         
@@ -73,28 +77,27 @@ public class MemoryService
     // memory/resources/status
     @GET
     @Path("status")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public Response status()
     {
         if (memory.isEmpty())
             return Response.status(Response.Status.NOT_FOUND).entity("no data").build();
 
+        Gson gson = new Gson();
+        AircraftQueueItem[] arr = new AircraftQueueItem[memory.size()];
+        int current = 0;
+        
         synchronized(memory)
         {
-            Gson gson = new Gson();
-            AircraftQueueItem[] arr = new AircraftQueueItem[memory.size()];
-
-            int current = 0;
-            for (Map.Entry<Integer, String> entry : memory.entrySet())
+            for (Map.Entry<Integer, AircraftQueueItem> entry : memory.entrySet())
             {
-                AircraftQueueItem qi = gson.fromJson(entry.getValue(), AircraftQueueItem.class);
-                arr[current] = qi;
+                arr[current] = entry.getValue();
                 current++;
             }
-
-            return Response.status(Response.Status.OK).entity(gson.toJson(arr)).build();
         }
 
+        return Response.status(Response.Status.OK).entity(gson.toJson(arr)).build();
+        
     }
     
 }

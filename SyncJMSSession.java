@@ -3,13 +3,14 @@ package memservice;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.jms.*;
 import com.google.gson.Gson;
+import com.mycompamy.aicraftqueueitems.AircraftQueueItem;
 import com.mycompamy.aicraftqueueitems.Aircraft;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class SyncJMSSession
 {
-    private ConcurrentHashMap<Integer, String> memory;
+    private ConcurrentHashMap<Integer, AircraftQueueItem> memory;
     private Gson gson = new Gson();
     
     private boolean isAddder;
@@ -17,7 +18,7 @@ class SyncJMSSession
     private Session     session;
     private MessageConsumer consumer;
     
-    SyncJMSSession(ConcurrentHashMap<Integer, String> mem,
+    SyncJMSSession(ConcurrentHashMap<Integer, AircraftQueueItem> mem,
         ConnectionFactory factory, Queue queue, boolean action) throws JMSException
     {
         isAddder = action;
@@ -38,12 +39,17 @@ class SyncJMSSession
             try
             {
                 String jsonStr = ((TextMessage) message).getText();
-                Aircraft a = gson.fromJson( jsonStr, Aircraft.class);
                 
                 if (isAddder)
-                    memory.put(a.getId(), jsonStr);
+                {
+                    AircraftQueueItem qi = gson.fromJson( jsonStr, AircraftQueueItem.class);
+                    memory.put(qi.first.getId(), qi);
+                }
                 else
+                {
+                    Aircraft a = gson.fromJson( jsonStr, Aircraft.class);
                     memory.remove(a.getId());
+                }
             }
             catch (Exception ex)
             {
