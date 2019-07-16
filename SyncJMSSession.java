@@ -1,3 +1,12 @@
+/**
+ * probably parametrize w/ java.lang.class AddListener.class or RemListener.class
+ * 
+ * and 
+ * 
+ * consumer.setMessageListener((My) MyClass.newInstance());
+ * 
+ */
+
 package memservice;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +39,9 @@ class SyncJMSSession
         consumer.setMessageListener((MessageListener) new MyListener());
         connection.start();
     }
+
+    /* probably move to MyMessageListener classes
+    */
 
     private class MyListener implements MessageListener
     {
