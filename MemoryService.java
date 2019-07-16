@@ -39,31 +39,11 @@ public class MemoryService
 
     @Context Application app;
 
-    private SyncJMSSession addSession;
-    private SyncJMSSession remSession;
-
-    // inject JMS queue
-    @Resource(lookup = "jms/DefaultJMSConnectionFactory", type=javax.jms.ConnectionFactory.class)
-    private javax.jms.ConnectionFactory jmsConnectionFactory;
-    @Resource(lookup = "jms/addMemoryQueue", type = javax.jms.Queue.class)
-    private javax.jms.Queue addMemoryQueue;
-    @Resource(lookup = "jms/delMemoryQueue", type = javax.jms.Queue.class)
-    private javax.jms.Queue remMemoryQueue;
-    
     @PostConstruct
     private void init()
     {
         Map<String, Object> properties = app.getProperties();
         memory = (ConcurrentHashMap) properties.get("MEMORY");
-        
-        try {
-            addSession = new SyncJMSSession(memory, jmsConnectionFactory, addMemoryQueue, true);
-            remSession = new SyncJMSSession(memory, jmsConnectionFactory, remMemoryQueue, false);
-        } catch (JMSException ex)
-        {
-            Logger.getLogger(SyncJMSSession.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
     }    
 
     @PreDestroy
@@ -97,7 +77,6 @@ public class MemoryService
         }
 
         return Response.status(Response.Status.OK).entity(gson.toJson(arr)).build();
-        
     }
     
 }

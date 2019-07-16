@@ -42,27 +42,13 @@ public class AircraftQueueResource
 
     @Context Application app;
 
-    // inject JMS queue
-    @Resource(lookup = "jms/DefaultJMSConnectionFactory", type=javax.jms.ConnectionFactory.class)
-    private javax.jms.ConnectionFactory jmsConnectionFactory;
-    @Resource(lookup = "jms/addMemoryQueue", type = javax.jms.Queue.class)
-    private javax.jms.Queue addMemoryQueue;
-    @Resource(lookup = "jms/delMemoryQueue", type = javax.jms.Queue.class)
-    private javax.jms.Queue remMemoryQueue;
-    
     @PostConstruct
     private void init()
     {
         Map<String, Object> properties = app.getProperties();
         myQueue = (ApplicationQueue) properties.get("QUEUE");
-        
-        try {
-            addSession = new AircraftJMSSession(jmsConnectionFactory, addMemoryQueue);
-            remSession = new AircraftJMSSession(jmsConnectionFactory, remMemoryQueue);
-        } catch (JMSException ex) {
-            Logger.getLogger(AircraftQueueResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
+        addSession = (AircraftJMSSession) properties.get("BACKUPY_ADD");
+        remSession = (AircraftJMSSession) properties.get("BACKUPY_DEL");
     }    
 
     @PreDestroy
