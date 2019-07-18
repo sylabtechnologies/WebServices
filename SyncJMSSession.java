@@ -1,10 +1,20 @@
 /**
- * probably parametrize w/ java.lang.class AddListener.class or RemListener.class
- * 
- * and 
- * 
- * consumer.setMessageListener((My) MyClass.newInstance());
- * 
+ * try 
+ *
+    SyncJMSSession addSession = new SyncJMSSession(
+        memory,
+        factory, 
+        addQueue,
+        (msg)-> { add(fromJson(msg));}
+        );
+
+    SyncJMSSession delSession = new SyncJMSSession(
+        memory,
+        factory, 
+        addQueue,
+        (msg)-> { delete(fromJson(msg));}
+        );
+
  */
 
 package memservice;
@@ -22,17 +32,14 @@ class SyncJMSSession
     private ConcurrentHashMap<Integer, AircraftQueueItem> memory;
     private Gson gson = new Gson();
     
-    private boolean isAddder;
     private Connection  connection;
     private Session     session;
     private MessageConsumer consumer;
     
     SyncJMSSession(ConcurrentHashMap<Integer, AircraftQueueItem> mem,
-        ConnectionFactory factory, Queue queue, boolean action) throws JMSException
+        ConnectionFactory factory, Queue queue, MessageListener myListener) throws JMSException
     {
-        isAddder = action;
         memory = mem;
-
         connection = factory.createConnection();
         session    = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session.createConsumer(queue);
@@ -40,36 +47,21 @@ class SyncJMSSession
         connection.start();
     }
 
-    /* probably move to MyMessageListener classes
-    */
-
-    private class MyListener implements MessageListener
+    AircraftQueueItem fromJson(Message message)
     {
-        @Override
-        public void onMessage(Message message)
+        try
         {
-            try
-            {
-                String jsonStr = ((TextMessage) message).getText();
-                
-                if (isAddder)
-                {
-                    AircraftQueueItem qi = gson.fromJson( jsonStr, AircraftQueueItem.class);
-                    memory.put(qi.first.getId(), qi);
-                }
-                else
-                {
-                    Aircraft a = gson.fromJson( jsonStr, Aircraft.class);
-                    memory.remove(a.getId());
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.getLogger(SyncJMSSession.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
+            String jsonStr = ((TextMessage) message).getText();
+            return gson.fromJson( jsonStr, AircraftQueueItem.class);
+        }
+        catch (Exception ex)
+        {
+            Logger.getLogger(SyncJMSSession.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+    void add(AircraftQueueItem qi) {memory.put(qi.first.getId(), qi);}
+    void delete(AircraftQueueItem qi) {memory.remove(qi.first.getId());}
 
     void close()
     {
